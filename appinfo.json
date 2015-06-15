@@ -7,7 +7,13 @@
     "longName": "XeleWatchFace",
     "projectType": "native",
     "resources": {
-        "media": []
+        "media": [
+            {
+                "file": "fonts/WarGames.TTF",
+                "name": "FONT_WARGAMES_40",
+                "type": "font"
+            }
+        ]
     },
     "sdkVersion": "2",
     "shortName": "XeleWatchFace",
