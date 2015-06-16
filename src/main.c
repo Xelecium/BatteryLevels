@@ -2,90 +2,129 @@
   
 static Window *s_main_window;
 static TextLayer *s_time_layer;
+static TextLayer *s_date_layer;
 static GFont s_time_font;
+static GFont s_date_font;
 
 static void update_time() {
-  // Get a tm structure
-  time_t temp = time(NULL); 
-  struct tm *tick_time = localtime(&temp);
+	//Get a tm structure
+	time_t temp = time(NULL); 
+	struct tm *now = localtime(&temp);
 
-  // Create a long-lived buffer
-  static char buffer[] = "00:00";
+	//Character array (string) to hold the time
+	static char timeString[] = "00:00";
 
-  // Write the current hours and minutes into the buffer
-  if(clock_is_24h_style() == true) {
-    //Use 2h hour format
-    strftime(buffer, sizeof("00:00"), "%H:%M", tick_time);
-  } else {
-    //Use 12 hour format
-    strftime(buffer, sizeof("00:00"), "%I:%M", tick_time);
-  }
+	//Save the value of the time item
+	if(clock_is_24h_style()){
+		//Use 2h hour format
+		strftime(timeString, sizeof("00:00"), "%H:%M", now);
 
-  // Display this time on the TextLayer
-  text_layer_set_text(s_time_layer, buffer);
+	} else {
+		//Use 12 hour format
+		strftime(timeString, sizeof("00:00"), "%I:%M", now);
+	}
+
+	// Display this time on the TextLayer
+	text_layer_set_text(s_time_layer, timeString);
+}
+
+static void update_date() {
+	//Get a tm structure
+	time_t temp = time(NULL);
+	struct tm *now = localtime(&temp);
+	
+	//Character array (string) to hold the date
+	static char dateString[] = "25 September";
+	
+	//Save the value of the date item
+	strftime(dateString, sizeof("25 September"), "%d %B", now);
+	
+	//Set the date on the date TextLayer
+	text_layer_set_text(s_date_layer, dateString);
 }
 
 static void main_window_load(Window *window) {
+	//Set the background of the watchface to black
 	window_set_background_color(window, GColorBlack);
 	
-  // Create time TextLayer
-  s_time_layer = text_layer_create(GRect(0, 120, 144, 50));
-  text_layer_set_background_color(s_time_layer, GColorBlack);
-  text_layer_set_text_color(s_time_layer, GColorWhite);
+	//Create TextLayer for the time
+	s_time_layer = text_layer_create(GRect(0, 120, 144, 50));
+	text_layer_set_background_color(s_time_layer, GColorBlack);
+	text_layer_set_text_color(s_time_layer, GColorWhite);
 	text_layer_set_text(s_time_layer, "00:00");
 	
-	// Create GFont
-	s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_WARGAMES_40));
+	//Specify font for the time TextLayer
+	s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_36));
+	text_layer_set_font(s_time_layer, s_time_font);
+	
+	//Align the time to the center (horizontally) of the watch
+	text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
+	
+	//Create TextLayer for the date
+	s_date_layer = text_layer_create(GRect(0, 5, 144, 50));
+	text_layer_set_background_color(s_date_layer, GColorBlack);
+	text_layer_set_text_color(s_date_layer, GColorWhite);
+	text_layer_set_text(s_date_layer, "01 January");
+	
+	s_date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_20));
+	text_layer_set_font(s_date_layer, s_date_font);
+	
+	text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
 
-  // Improve the layout to be more like a watchface
-  //text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
-  text_layer_set_font(s_time_layer, s_time_font);
-  text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
-
-  // Add it as a child layer to the Window's root layer
-  layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_time_layer));
+	//Add the TextLayers as children of the Window layer
+	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_time_layer));
+	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_date_layer));
   
-  // Make sure the time is displayed from the start
-  update_time();
+	//Update the time when the window is loaded
+	update_time();
 }
 
 static void main_window_unload(Window *window) {
-	// Unload GFont
+	
+	//Unload the custom font
 	fonts_unload_custom_font(s_time_font);
 	
-	// Destroy TextLayer
+	//Destroy the TextLayers
 	text_layer_destroy(s_time_layer);
 	
 }
 
-static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
-  update_time();
+//Handler for every time a time unit changes (every minute)
+static void minute_update(struct tm *tick_time, TimeUnits units_changed) {
+	update_time();
+}
+
+static void date_update(struct tm *tick_time, TimeUnits units_changed) {
+	update_date();
 }
   
 static void init() {
-  // Create main Window element and assign to pointer
-  s_main_window = window_create();
+	//Create the main Window layer
+	s_main_window = window_create();
 
-  // Set handlers to manage the elements inside the Window
-  window_set_window_handlers(s_main_window, (WindowHandlers) {
-    .load = main_window_load,
-    .unload = main_window_unload
-  });
+	//Setup handlers for the window when it is loaded or unloaded
+	window_set_window_handlers(s_main_window, (WindowHandlers) {
+		.load = main_window_load,
+		.unload = main_window_unload
+	});
 
-  // Show the Window on the watch, with animated=true
-  window_stack_push(s_main_window, true);
+	//Show the Window on the watch (animated=true)
+	window_stack_push(s_main_window, true);
   
-  // Register with TickTimerService
-  tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+	//Set a TickTimerService so it updates every minute
+	tick_timer_service_subscribe(MINUTE_UNIT, minute_update);
+	
+	//Set another TickTimerService so it updates every day
+	tick_timer_service_subscribe(DAY_UNIT, date_update);
 }
 
 static void deinit() {
-  // Destroy Window
-  window_destroy(s_main_window);
+	// Destroy Window
+	window_destroy(s_main_window);
 }
 
 int main(void) {
-  init();
-  app_event_loop();
-  deinit();
+	init();
+	app_event_loop();
+	deinit();
 }

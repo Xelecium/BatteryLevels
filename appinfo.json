@@ -9,8 +9,13 @@
     "resources": {
         "media": [
             {
-                "file": "fonts/WarGames.TTF",
-                "name": "FONT_WARGAMES_40",
+                "file": "fonts/Lane.ttf",
+                "name": "FONT_LANE_20",
+                "type": "font"
+            },
+            {
+                "file": "fonts/Lane.ttf",
+                "name": "FONT_LANE_36",
                 "type": "font"
             }
         ]
