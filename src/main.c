@@ -9,10 +9,12 @@ static GFont s_time_font;
 static TextLayer *s_date_layer;
 static GFont s_date_font;
 //Elements for the Pebble battery level
-static BitmapLayer *s_battery_image_layer;
-static GBitmap *s_battery_image;
+static BitmapLayer *s_pebble_image_layer;
+static GBitmap *s_pebble_image;
 static TextLayer *s_battery_level_layer;
 static GFont *s_battery_font;
+static BitmapLayer *s_battery_charge_layer;
+static GBitmap *s_battery_charge;
 
 
 static void update_time() {
@@ -52,11 +54,21 @@ static void update_date() {
 	text_layer_set_text(s_date_layer, dateString);
 }
 
-static void battery_handler(BatteryChargeState new_state) {
+static void battery_handler(BatteryChargeState charge_state) {
 	// Write to buffer and display
 	static char batteryValue[] = "100%";
-	snprintf(batteryValue, sizeof(batteryValue), "%d%%", new_state.charge_percent);
-	text_layer_set_text(s_battery_level_layer, batteryValue);
+	
+	//Behavior depends on if the Pebble is currently charging or not
+	if (charge_state.is_charging) {
+		//Empty the TextLayer, set the BitmapLayer
+		text_layer_set_text(s_battery_level_layer, "");
+		bitmap_layer_set_bitmap(s_battery_charge_layer, s_battery_charge);
+	} else {
+		//Empty the BitmapLayer, set the TextLayer
+		bitmap_layer_set_bitmap(s_battery_charge_layer, NULL);
+		snprintf(batteryValue, sizeof(batteryValue), "%d%%", charge_state.charge_percent);
+		text_layer_set_text(s_battery_level_layer, batteryValue);
+	}
 }
 
 static void main_window_load(Window *window) {
@@ -65,7 +77,7 @@ static void main_window_load(Window *window) {
 	
 	//===============================TIME
 	//Create TextLayer for the time
-	s_time_layer = text_layer_create(GRect(0, 120, 144, 50));
+	s_time_layer = text_layer_create(GRect(0, 115, 144, 40));
 	text_layer_set_background_color(s_time_layer, GColorBlack);
 	text_layer_set_text_color(s_time_layer, GColorWhite);
 	text_layer_set_text(s_time_layer, "00:00");
@@ -79,37 +91,41 @@ static void main_window_load(Window *window) {
 	
 	//===============================DATE
 	//Create TextLayer for the date
-	s_date_layer = text_layer_create(GRect(0, 5, 144, 30));
+	s_date_layer = text_layer_create(GRect(0, 10, 144, 30));
 	text_layer_set_background_color(s_date_layer, GColorBlack);
 	text_layer_set_text_color(s_date_layer, GColorWhite);
 	text_layer_set_text(s_date_layer, "01 January");
 	
-	s_date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_20));
+	s_date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_24));
 	text_layer_set_font(s_date_layer, s_date_font);
 	
 	text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
 
 	//===============================PEBBLE BATTERY
-	s_battery_image_layer = bitmap_layer_create(GRect(5, 50, 52, 52));
-	s_battery_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PEBBLE_ICON);
-	bitmap_layer_set_bitmap(s_battery_image_layer, s_battery_image);
+	s_pebble_image_layer = bitmap_layer_create(GRect(5, 45, 70, 70));
+	s_pebble_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PEBBLE_ICON);
+	bitmap_layer_set_bitmap(s_pebble_image_layer, s_pebble_image);
 	
-	s_battery_level_layer = text_layer_create(GRect(15, 100, 30, 20));
+	s_battery_level_layer = text_layer_create(GRect(25, 72, 30, 20));
 	text_layer_set_background_color(s_battery_level_layer, GColorBlack);
 	text_layer_set_text_color(s_battery_level_layer, GColorWhite);
 	text_layer_set_text(s_battery_level_layer, "100%");
 	
-	s_battery_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_10));
+	s_battery_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_12));
 	text_layer_set_font(s_battery_level_layer, s_battery_font);
 	
 	text_layer_set_text_alignment(s_battery_level_layer, GTextAlignmentCenter);
-	
+	//Charging image
+	s_battery_charge_layer = bitmap_layer_create(GRect(30, 70, 20, 20));
+	s_battery_charge = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CHARGE_ICON);
+	bitmap_layer_set_bitmap(s_battery_charge_layer, s_battery_charge);
 	
 	//Add the Layers as children of the Window layer
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_time_layer));
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_date_layer));
-	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_battery_image_layer));
+	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_pebble_image_layer));
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_battery_level_layer));
+	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_battery_charge_layer));
   
 	//Update the time when the window is loaded
 	update_time();
@@ -126,13 +142,15 @@ static void main_window_unload(Window *window) {
 	fonts_unload_custom_font(s_battery_font);
 	
 	//Destroy the images
-	gbitmap_destroy(s_battery_image);
+	gbitmap_destroy(s_pebble_image);
+	gbitmap_destroy(s_battery_charge);
 	
 	//Destroy the Layers
 	text_layer_destroy(s_time_layer);
 	text_layer_destroy(s_date_layer);
-	bitmap_layer_destroy(s_battery_image_layer);
+	bitmap_layer_destroy(s_pebble_image_layer);
 	text_layer_destroy(s_battery_level_layer);
+	bitmap_layer_destroy(s_battery_charge_layer);
 	
 }
 

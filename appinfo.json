@@ -9,23 +9,28 @@
     "resources": {
         "media": [
             {
+                "file": "images/charge.png",
+                "name": "IMAGE_CHARGE_ICON",
+                "type": "png"
+            },
+            {
                 "file": "images/pebble.png",
                 "name": "IMAGE_PEBBLE_ICON",
                 "type": "png"
             },
             {
                 "file": "fonts/Lane.ttf",
-                "name": "FONT_LANE_10",
-                "type": "font"
-            },
-            {
-                "file": "fonts/Lane.ttf",
-                "name": "FONT_LANE_20",
-                "type": "font"
-            },
-            {
-                "file": "fonts/Lane.ttf",
                 "name": "FONT_LANE_36",
+                "type": "font"
+            },
+            {
+                "file": "fonts/Lane.ttf",
+                "name": "FONT_LANE_24",
+                "type": "font"
+            },
+            {
+                "file": "fonts/Lane.ttf",
+                "name": "FONT_LANE_12",
                 "type": "font"
             }
         ]
