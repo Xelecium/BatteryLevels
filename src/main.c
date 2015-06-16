@@ -1,10 +1,19 @@
 #include <pebble.h>
   
+//Main Window element
 static Window *s_main_window;
+//Elements for the time
 static TextLayer *s_time_layer;
-static TextLayer *s_date_layer;
 static GFont s_time_font;
+//Elements for the date
+static TextLayer *s_date_layer;
 static GFont s_date_font;
+//Elements for the Pebble battery level
+static BitmapLayer *s_battery_image_layer;
+static GBitmap *s_battery_image;
+static TextLayer *s_battery_level_layer;
+static GFont *s_battery_font;
+
 
 static void update_time() {
 	//Get a tm structure
@@ -47,6 +56,7 @@ static void main_window_load(Window *window) {
 	//Set the background of the watchface to black
 	window_set_background_color(window, GColorBlack);
 	
+	//===============================TIME
 	//Create TextLayer for the time
 	s_time_layer = text_layer_create(GRect(0, 120, 144, 50));
 	text_layer_set_background_color(s_time_layer, GColorBlack);
@@ -60,6 +70,7 @@ static void main_window_load(Window *window) {
 	//Align the time to the center (horizontally) of the watch
 	text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
 	
+	//===============================DATE
 	//Create TextLayer for the date
 	s_date_layer = text_layer_create(GRect(0, 5, 144, 50));
 	text_layer_set_background_color(s_date_layer, GColorBlack);
@@ -71,9 +82,29 @@ static void main_window_load(Window *window) {
 	
 	text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
 
-	//Add the TextLayers as children of the Window layer
+	//===============================PEBBLE BATTERY
+	s_battery_image_layer = bitmap_layer_create(GRect(0, 50, 52, 52));
+	s_battery_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PEBBLE_ICON);
+	bitmap_layer_set_bitmap(s_battery_image_layer, s_battery_image);
+	
+	s_battery_level_layer = text_layer_create(GRect(20, 50, 94, 20));
+	text_layer_set_background_color(s_battery_level_layer, GColorBlack);
+	text_layer_set_text_color(s_battery_level_layer, GColorWhite);
+	text_layer_set_text(s_battery_level_layer, "100%");
+	
+	s_battery_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_10));
+	text_layer_set_font(s_battery_level_layer, s_battery_font);
+	
+	text_layer_set_text_alignment(s_battery_level_layer, GTextAlignmentRight);
+	
+	
+	
+	
+	//Add the Layers as children of the Window layer
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_time_layer));
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_date_layer));
+	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_battery_image_layer));
+	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_battery_level_layer));
   
 	//Update the time when the window is loaded
 	update_time();
@@ -81,11 +112,19 @@ static void main_window_load(Window *window) {
 
 static void main_window_unload(Window *window) {
 	
-	//Unload the custom font
+	//Unload the custom fonts
 	fonts_unload_custom_font(s_time_font);
+	fonts_unload_custom_font(s_date_font);
+	fonts_unload_custom_font(s_battery_font);
 	
-	//Destroy the TextLayers
+	//Destroy the images
+	gbitmap_destroy(s_battery_image);
+	
+	//Destroy the Layers
 	text_layer_destroy(s_time_layer);
+	text_layer_destroy(s_date_layer);
+	bitmap_layer_destroy(s_battery_image_layer);
+	text_layer_destroy(s_battery_level_layer);
 	
 }
 
@@ -121,6 +160,7 @@ static void init() {
 static void deinit() {
 	// Destroy Window
 	window_destroy(s_main_window);
+
 }
 
 int main(void) {
