@@ -52,6 +52,13 @@ static void update_date() {
 	text_layer_set_text(s_date_layer, dateString);
 }
 
+static void battery_handler(BatteryChargeState new_state) {
+	// Write to buffer and display
+	static char batteryValue[] = "100%";
+	snprintf(batteryValue, sizeof(batteryValue), "%d%%", new_state.charge_percent);
+	text_layer_set_text(s_battery_level_layer, batteryValue);
+}
+
 static void main_window_load(Window *window) {
 	//Set the background of the watchface to black
 	window_set_background_color(window, GColorBlack);
@@ -72,7 +79,7 @@ static void main_window_load(Window *window) {
 	
 	//===============================DATE
 	//Create TextLayer for the date
-	s_date_layer = text_layer_create(GRect(0, 5, 144, 50));
+	s_date_layer = text_layer_create(GRect(0, 5, 144, 30));
 	text_layer_set_background_color(s_date_layer, GColorBlack);
 	text_layer_set_text_color(s_date_layer, GColorWhite);
 	text_layer_set_text(s_date_layer, "01 January");
@@ -83,11 +90,11 @@ static void main_window_load(Window *window) {
 	text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
 
 	//===============================PEBBLE BATTERY
-	s_battery_image_layer = bitmap_layer_create(GRect(0, 50, 52, 52));
+	s_battery_image_layer = bitmap_layer_create(GRect(5, 50, 52, 52));
 	s_battery_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PEBBLE_ICON);
 	bitmap_layer_set_bitmap(s_battery_image_layer, s_battery_image);
 	
-	s_battery_level_layer = text_layer_create(GRect(20, 50, 94, 20));
+	s_battery_level_layer = text_layer_create(GRect(15, 100, 30, 20));
 	text_layer_set_background_color(s_battery_level_layer, GColorBlack);
 	text_layer_set_text_color(s_battery_level_layer, GColorWhite);
 	text_layer_set_text(s_battery_level_layer, "100%");
@@ -95,9 +102,7 @@ static void main_window_load(Window *window) {
 	s_battery_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_10));
 	text_layer_set_font(s_battery_level_layer, s_battery_font);
 	
-	text_layer_set_text_alignment(s_battery_level_layer, GTextAlignmentRight);
-	
-	
+	text_layer_set_text_alignment(s_battery_level_layer, GTextAlignmentCenter);
 	
 	
 	//Add the Layers as children of the Window layer
@@ -108,6 +113,9 @@ static void main_window_load(Window *window) {
   
 	//Update the time when the window is loaded
 	update_time();
+	update_date();
+	// Get the current battery level
+  	battery_handler(battery_state_service_peek());
 }
 
 static void main_window_unload(Window *window) {
@@ -155,6 +163,9 @@ static void init() {
 	
 	//Set another TickTimerService so it updates every day
 	tick_timer_service_subscribe(DAY_UNIT, date_update);
+	
+	//Set the Battery State Service so we can get battery level
+	battery_state_service_subscribe(battery_handler);
 }
 
 static void deinit() {
