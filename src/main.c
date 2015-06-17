@@ -17,8 +17,8 @@ static GBitmap *s_pebble_image;
 static TextLayer *s_pebble_battery_layer;
 static GFont *s_pebble_font;
 
-//static BitmapLayer *s_pebble_plug_layer;
-//static GBitmap *s_pebble_plug;
+static BitmapLayer *s_pebble_plug_layer;
+static GBitmap *s_pebble_plug;
 static BitmapLayer *s_pebble_charge_layer;
 static GBitmap *s_pebble_charge;
 
@@ -69,17 +69,24 @@ static void update_date() {
 }
 
 static void battery_handler(BatteryChargeState charge_state) {
-	// Write to buffer and display
+	//Temporary buffer value
 	static char batteryValue[] = "100%";
 	 
-	//TODO: Add in behavior for whether or not the Pebble is plugged in
+	//Display plug if the pebble is plugged in
+	if (charge_state.is_plugged) {
+		bitmap_layer_set_bitmap(s_pebble_plug_layer, s_pebble_plug);
+	}
+	else {
+		bitmap_layer_set_bitmap(s_pebble_plug_layer, NULL);
+	}
 	
 	//Behavior depends on if the Pebble is currently charging or not
 	if (charge_state.is_charging) {
 		//Empty the TextLayer, set the BitmapLayer
 		text_layer_set_text(s_pebble_battery_layer, "");
 		bitmap_layer_set_bitmap(s_pebble_charge_layer, s_pebble_charge);
-	} else {
+	} 
+	else {
 		//Empty the BitmapLayer, set the TextLayer
 		bitmap_layer_set_bitmap(s_pebble_charge_layer, NULL);
 		snprintf(batteryValue, sizeof(batteryValue), "%d%%", charge_state.charge_percent);
@@ -142,7 +149,10 @@ static void main_window_load(Window *window) {
 	s_pebble_charge = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CHARGE_ICON);
 	bitmap_layer_set_bitmap(s_pebble_charge_layer, s_pebble_charge);
 	
-	//TODO: Add in a new bitmap for if the pebble is currently plugged in
+	//Plug image
+	s_pebble_plug_layer = bitmap_layer_create(GRect(2, 84, 11, 43));
+	s_pebble_plug = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PLUG_ICON);
+	bitmap_layer_set_bitmap(s_pebble_plug_layer, s_pebble_plug);
 	
 	//=================================PHONE BATTERY
 	s_phone_image_layer = bitmap_layer_create(GRect(70, 45, 70, 70));
@@ -172,6 +182,7 @@ static void main_window_load(Window *window) {
 	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_pebble_image_layer));
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_pebble_battery_layer));
 	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_pebble_charge_layer));
+	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_pebble_plug_layer));
 	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_phone_image_layer));
 	//layer_add_child_window_get_root_layer(window), text_layer_get_layer(s_phone_battery_layer));
 	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_phone_disconnected_layer));
@@ -195,6 +206,7 @@ static void main_window_unload(Window *window) {
 	//Destroy the images
 	gbitmap_destroy(s_pebble_image);
 	gbitmap_destroy(s_pebble_charge);
+	gbitmap_destroy(s_pebble_plug);
 	gbitmap_destroy(s_phone_image);
 	gbitmap_destroy(s_phone_disconnected_image);
 	
@@ -204,6 +216,7 @@ static void main_window_unload(Window *window) {
 	bitmap_layer_destroy(s_pebble_image_layer);
 	text_layer_destroy(s_pebble_battery_layer);
 	bitmap_layer_destroy(s_pebble_charge_layer);
+	bitmap_layer_destroy(s_pebble_plug_layer);
 	bitmap_layer_destroy(s_phone_image_layer);
 	//text_layer_destroy(s_phone_battery_layer);
 	bitmap_layer_destroy(s_phone_disconnected_layer);

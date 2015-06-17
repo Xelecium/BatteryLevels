@@ -9,6 +9,11 @@
     "resources": {
         "media": [
             {
+                "file": "images/pebble_plug.png",
+                "name": "IMAGE_PLUG_ICON",
+                "type": "png"
+            },
+            {
                 "file": "images/disconnected.png",
                 "name": "IMAGE_DISCONNECTED_ICON",
                 "type": "png"
