@@ -9,13 +9,18 @@
     "resources": {
         "media": [
             {
+                "file": "images/phone_plug.png",
+                "name": "IMAGE_PHONE_PLUG_ICON",
+                "type": "png"
+            },
+            {
                 "file": "images/pebble.png",
                 "name": "IMAGE_PEBBLE_ICON",
                 "type": "png"
             },
             {
                 "file": "images/pebble_plug.png",
-                "name": "IMAGE_PLUG_ICON",
+                "name": "IMAGE_PEBBLE_PLUG_ICON",
                 "type": "png"
             },
             {

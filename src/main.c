@@ -1,7 +1,9 @@
 #include <pebble.h>
 	
-//Key for getting data from the phone about the battery
+//Key for getting data from the phone 
+//about the battery & its charge status
 #define PHONE_BATTERY_DATA 3
+#define PHONE_PLUGGED_STATE 7
   
 //Main Window element
 static Window *s_main_window;
@@ -30,6 +32,8 @@ static BitmapLayer *s_phone_image_layer;
 static GBitmap *s_phone_image;
 static TextLayer *s_phone_battery_layer;
 static GFont *s_phone_font;
+static BitmapLayer *s_phone_plug_layer;
+static GBitmap *s_phone_plug_image;
 static BitmapLayer *s_phone_disconnected_layer;
 static GBitmap *s_phone_disconnected_image;
 
@@ -147,7 +151,7 @@ static void main_window_load(Window *window) {
 	s_pebble_battery_layer = text_layer_create(GRect(26, 72, 30, 20));
 	text_layer_set_background_color(s_pebble_battery_layer, GColorBlack);
 	text_layer_set_text_color(s_pebble_battery_layer, GColorWhite);
-	text_layer_set_text(s_pebble_battery_layer, "100%");
+	text_layer_set_text(s_pebble_battery_layer, "");
 	
 	s_pebble_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_12));
 	text_layer_set_font(s_pebble_battery_layer, s_pebble_font);
@@ -160,7 +164,7 @@ static void main_window_load(Window *window) {
 	
 	//Plug image
 	s_pebble_plug_layer = bitmap_layer_create(GRect(8, 84, 11, 43));
-	s_pebble_plug = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PLUG_ICON);
+	s_pebble_plug = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PEBBLE_PLUG_ICON);
 	bitmap_layer_set_bitmap(s_pebble_plug_layer, s_pebble_plug);
 	
 	//=================================PHONE BATTERY
@@ -171,12 +175,17 @@ static void main_window_load(Window *window) {
 	s_phone_battery_layer = text_layer_create(GRect(90, 72, 30, 20));
 	text_layer_set_background_color(s_phone_battery_layer, GColorBlack);
 	text_layer_set_text_color(s_phone_battery_layer, GColorWhite);
-	text_layer_set_text(s_phone_battery_layer, "100%");
+	text_layer_set_text(s_phone_battery_layer, "");
 	
 	s_phone_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_12));
 	text_layer_set_font(s_phone_battery_layer, s_phone_font);
 	
 	text_layer_set_text_alignment(s_phone_battery_layer, GTextAlignmentCenter);
+	
+	//Plug image
+	s_phone_plug_layer = bitmap_layer_create(GRect(102, 113, 32, 9));
+	s_phone_plug_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PHONE_PLUG_ICON);
+	bitmap_layer_set_bitmap(s_phone_plug_layer, s_phone_plug_image);
 	
 	//Disconnected image
 	s_phone_disconnected_layer = bitmap_layer_create(GRect(95, 70, 20, 20));
@@ -195,7 +204,8 @@ static void main_window_load(Window *window) {
 	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_phone_image_layer));
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_phone_battery_layer));
 	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_phone_disconnected_layer));
-  
+	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_phone_plug_layer));
+	
 	//Update the time when the window is loaded
 	update_time();
 	update_date();
@@ -218,6 +228,7 @@ static void main_window_unload(Window *window) {
 	gbitmap_destroy(s_pebble_plug);
 	gbitmap_destroy(s_phone_image);
 	gbitmap_destroy(s_phone_disconnected_image);
+	gbitmap_destroy(s_phone_plug_image);
 	
 	//Destroy the Layers
 	text_layer_destroy(s_time_layer);
@@ -229,6 +240,7 @@ static void main_window_unload(Window *window) {
 	bitmap_layer_destroy(s_phone_image_layer);
 	text_layer_destroy(s_phone_battery_layer);
 	bitmap_layer_destroy(s_phone_disconnected_layer);
+	bitmap_layer_destroy(s_phone_plug_layer);
 }
 
 //Handler for every time a time unit changes (every minute)
