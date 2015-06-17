@@ -1,4 +1,7 @@
 #include <pebble.h>
+	
+//Key for getting data from the phone about the battery
+#define PHONE_BATTERY_DATA 3
   
 //Main Window element
 static Window *s_main_window;
@@ -25,8 +28,8 @@ static GBitmap *s_pebble_charge;
 //Elements for the Phone battery level
 static BitmapLayer *s_phone_image_layer;
 static GBitmap *s_phone_image;
-//static TextLayer *s_phone_battery_layer;
-//static GFont *s_phone_font;
+static TextLayer *s_phone_battery_layer;
+static GFont *s_phone_font;
 static BitmapLayer *s_phone_disconnected_layer;
 static GBitmap *s_phone_disconnected_image;
 
@@ -159,15 +162,15 @@ static void main_window_load(Window *window) {
 	s_phone_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PHONE_ICON);
 	bitmap_layer_set_bitmap(s_phone_image_layer, s_phone_image);
 	
-	//s_phone_battery_layer = text_layer_create(GRect(80, 72, 30, 20));
-	//text_layer_set_background_color(s_phone_battery_layer, GColorBlack);
-	//text_layer_set_text_color(s_phone_battery_layer, GColorWhite);
-	//text_layer_set_text(s_phone_battery_layer, "100%");
+	s_phone_battery_layer = text_layer_create(GRect(90, 72, 30, 20));
+	text_layer_set_background_color(s_phone_battery_layer, GColorBlack);
+	text_layer_set_text_color(s_phone_battery_layer, GColorWhite);
+	text_layer_set_text(s_phone_battery_layer, "100%");
 	
-	//s_phone_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_12));
-	//text_layer_set_font(s_phone_battery_layer, s_phone_font);
+	s_phone_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_12));
+	text_layer_set_font(s_phone_battery_layer, s_phone_font);
 	
-	//text_layer_set_text_alignment(s_phone_battery_layer, GTextAlignmentCenter);
+	text_layer_set_text_alignment(s_phone_battery_layer, GTextAlignmentCenter);
 	
 	//Disconnected image
 	s_phone_disconnected_layer = bitmap_layer_create(GRect(95, 70, 20, 20));
@@ -184,7 +187,7 @@ static void main_window_load(Window *window) {
 	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_pebble_charge_layer));
 	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_pebble_plug_layer));
 	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_phone_image_layer));
-	//layer_add_child_window_get_root_layer(window), text_layer_get_layer(s_phone_battery_layer));
+	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_phone_battery_layer));
 	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_phone_disconnected_layer));
   
 	//Update the time when the window is loaded
@@ -218,7 +221,7 @@ static void main_window_unload(Window *window) {
 	bitmap_layer_destroy(s_pebble_charge_layer);
 	bitmap_layer_destroy(s_pebble_plug_layer);
 	bitmap_layer_destroy(s_phone_image_layer);
-	//text_layer_destroy(s_phone_battery_layer);
+	text_layer_destroy(s_phone_battery_layer);
 	bitmap_layer_destroy(s_phone_disconnected_layer);
 }
 
@@ -232,6 +235,16 @@ static void time_update(struct tm *tick_time, TimeUnits units_changed) {
 	}
 }
 
+static void in_received_handler(DictionaryIterator *iter, void *context) {
+	Tuple *t = dict_read_first(iter);
+	if (t) {
+		int value = (int)t->value->int32;
+		static char phoneValue[] = "100%";
+		snprintf(phoneValue, sizeof("100%"), "%i%%", value);
+		text_layer_set_text(s_phone_battery_layer, phoneValue);
+	}
+}
+
 static void init() {
 	//Create the main Window layer
 	s_main_window = window_create();
@@ -241,6 +254,10 @@ static void init() {
 		.load = main_window_load,
 		.unload = main_window_unload
 	});
+	
+	//Register AppMessage events
+	app_message_register_inbox_received(in_received_handler);         
+	app_message_open(512, 512);    //Large input and output buffer sizes
 
 	//Show the Window on the watch (animated=true)
 	window_stack_push(s_main_window, true);
