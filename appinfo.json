@@ -9,6 +9,16 @@
     "resources": {
         "media": [
             {
+                "file": "images/disconnected.png",
+                "name": "IMAGE_DISCONNECTED_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/phone.png",
+                "name": "IMAGE_PHONE_ICON",
+                "type": "png"
+            },
+            {
                 "file": "images/charge.png",
                 "name": "IMAGE_CHARGE_ICON",
                 "type": "png"

@@ -2,19 +2,33 @@
   
 //Main Window element
 static Window *s_main_window;
+
 //Elements for the time
 static TextLayer *s_time_layer;
 static GFont s_time_font;
+
 //Elements for the date
 static TextLayer *s_date_layer;
 static GFont s_date_font;
+
 //Elements for the Pebble battery level
 static BitmapLayer *s_pebble_image_layer;
 static GBitmap *s_pebble_image;
-static TextLayer *s_battery_level_layer;
-static GFont *s_battery_font;
-static BitmapLayer *s_battery_charge_layer;
-static GBitmap *s_battery_charge;
+static TextLayer *s_pebble_battery_layer;
+static GFont *s_pebble_font;
+
+//static BitmapLayer *s_pebble_plug_layer;
+//static GBitmap *s_pebble_plug;
+static BitmapLayer *s_pebble_charge_layer;
+static GBitmap *s_pebble_charge;
+
+//Elements for the Phone battery level
+static BitmapLayer *s_phone_image_layer;
+static GBitmap *s_phone_image;
+//static TextLayer *s_phone_battery_layer;
+//static GFont *s_phone_font;
+static BitmapLayer *s_phone_disconnected_layer;
+static GBitmap *s_phone_disconnected_image;
 
 
 static void update_time() {
@@ -57,17 +71,29 @@ static void update_date() {
 static void battery_handler(BatteryChargeState charge_state) {
 	// Write to buffer and display
 	static char batteryValue[] = "100%";
+	 
+	//TODO: Add in behavior for whether or not the Pebble is plugged in
 	
 	//Behavior depends on if the Pebble is currently charging or not
 	if (charge_state.is_charging) {
 		//Empty the TextLayer, set the BitmapLayer
-		text_layer_set_text(s_battery_level_layer, "");
-		bitmap_layer_set_bitmap(s_battery_charge_layer, s_battery_charge);
+		text_layer_set_text(s_pebble_battery_layer, "");
+		bitmap_layer_set_bitmap(s_pebble_charge_layer, s_pebble_charge);
 	} else {
 		//Empty the BitmapLayer, set the TextLayer
-		bitmap_layer_set_bitmap(s_battery_charge_layer, NULL);
+		bitmap_layer_set_bitmap(s_pebble_charge_layer, NULL);
 		snprintf(batteryValue, sizeof(batteryValue), "%d%%", charge_state.charge_percent);
-		text_layer_set_text(s_battery_level_layer, batteryValue);
+		text_layer_set_text(s_pebble_battery_layer, batteryValue);
+	}
+}
+
+static void bluetooth_handler(bool connected) {
+	if (connected) {
+		//text_layer_set_text(s_phone_battery_layer, #PHONE BATTERY LEVEL#);
+		bitmap_layer_set_bitmap(s_phone_disconnected_layer, NULL);
+	} else {
+		//text_layer_set_text(s_phone_battery_layer, "");
+		bitmap_layer_set_bitmap(s_phone_disconnected_layer, s_phone_disconnected_image);
 	}
 }
 
@@ -76,21 +102,17 @@ static void main_window_load(Window *window) {
 	window_set_background_color(window, GColorBlack);
 	
 	//===============================TIME
-	//Create TextLayer for the time
 	s_time_layer = text_layer_create(GRect(0, 115, 144, 40));
 	text_layer_set_background_color(s_time_layer, GColorBlack);
 	text_layer_set_text_color(s_time_layer, GColorWhite);
 	text_layer_set_text(s_time_layer, "00:00");
 	
-	//Specify font for the time TextLayer
 	s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_36));
 	text_layer_set_font(s_time_layer, s_time_font);
 	
-	//Align the time to the center (horizontally) of the watch
 	text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
 	
 	//===============================DATE
-	//Create TextLayer for the date
 	s_date_layer = text_layer_create(GRect(0, 10, 144, 30));
 	text_layer_set_background_color(s_date_layer, GColorBlack);
 	text_layer_set_text_color(s_date_layer, GColorWhite);
@@ -106,63 +128,97 @@ static void main_window_load(Window *window) {
 	s_pebble_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PEBBLE_ICON);
 	bitmap_layer_set_bitmap(s_pebble_image_layer, s_pebble_image);
 	
-	s_battery_level_layer = text_layer_create(GRect(25, 72, 30, 20));
-	text_layer_set_background_color(s_battery_level_layer, GColorBlack);
-	text_layer_set_text_color(s_battery_level_layer, GColorWhite);
-	text_layer_set_text(s_battery_level_layer, "100%");
+	s_pebble_battery_layer = text_layer_create(GRect(25, 72, 30, 20));
+	text_layer_set_background_color(s_pebble_battery_layer, GColorBlack);
+	text_layer_set_text_color(s_pebble_battery_layer, GColorWhite);
+	text_layer_set_text(s_pebble_battery_layer, "100%");
 	
-	s_battery_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_12));
-	text_layer_set_font(s_battery_level_layer, s_battery_font);
+	s_pebble_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_12));
+	text_layer_set_font(s_pebble_battery_layer, s_pebble_font);
 	
-	text_layer_set_text_alignment(s_battery_level_layer, GTextAlignmentCenter);
+	text_layer_set_text_alignment(s_pebble_battery_layer, GTextAlignmentCenter);
 	//Charging image
-	s_battery_charge_layer = bitmap_layer_create(GRect(30, 70, 20, 20));
-	s_battery_charge = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CHARGE_ICON);
-	bitmap_layer_set_bitmap(s_battery_charge_layer, s_battery_charge);
+	s_pebble_charge_layer = bitmap_layer_create(GRect(30, 70, 20, 20));
+	s_pebble_charge = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CHARGE_ICON);
+	bitmap_layer_set_bitmap(s_pebble_charge_layer, s_pebble_charge);
 	
+	//TODO: Add in a new bitmap for if the pebble is currently plugged in
+	
+	//=================================PHONE BATTERY
+	s_phone_image_layer = bitmap_layer_create(GRect(70, 45, 70, 70));
+	s_phone_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PHONE_ICON);
+	bitmap_layer_set_bitmap(s_phone_image_layer, s_phone_image);
+	
+	//s_phone_battery_layer = text_layer_create(GRect(80, 72, 30, 20));
+	//text_layer_set_background_color(s_phone_battery_layer, GColorBlack);
+	//text_layer_set_text_color(s_phone_battery_layer, GColorWhite);
+	//text_layer_set_text(s_phone_battery_layer, "100%");
+	
+	//s_phone_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_12));
+	//text_layer_set_font(s_phone_battery_layer, s_phone_font);
+	
+	//text_layer_set_text_alignment(s_phone_battery_layer, GTextAlignmentCenter);
+	
+	//Disconnected image
+	s_phone_disconnected_layer = bitmap_layer_create(GRect(95, 70, 20, 20));
+	s_phone_disconnected_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_DISCONNECTED_ICON);
+	bitmap_layer_set_bitmap(s_phone_disconnected_layer, s_phone_disconnected_image);
+	
+	
+	//=================================CLEANUP
 	//Add the Layers as children of the Window layer
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_time_layer));
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_date_layer));
 	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_pebble_image_layer));
-	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_battery_level_layer));
-	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_battery_charge_layer));
+	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_pebble_battery_layer));
+	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_pebble_charge_layer));
+	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_phone_image_layer));
+	//layer_add_child_window_get_root_layer(window), text_layer_get_layer(s_phone_battery_layer));
+	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_phone_disconnected_layer));
   
 	//Update the time when the window is loaded
 	update_time();
 	update_date();
-	// Get the current battery level
+	
+	//Get the current battery level
   	battery_handler(battery_state_service_peek());
+	//Get the BlueTooth connection status
+	bluetooth_handler(bluetooth_connection_service_peek());
 }
 
 static void main_window_unload(Window *window) {
-	
 	//Unload the custom fonts
 	fonts_unload_custom_font(s_time_font);
 	fonts_unload_custom_font(s_date_font);
-	fonts_unload_custom_font(s_battery_font);
+	fonts_unload_custom_font(s_pebble_font);
 	
 	//Destroy the images
 	gbitmap_destroy(s_pebble_image);
-	gbitmap_destroy(s_battery_charge);
+	gbitmap_destroy(s_pebble_charge);
+	gbitmap_destroy(s_phone_image);
+	gbitmap_destroy(s_phone_disconnected_image);
 	
 	//Destroy the Layers
 	text_layer_destroy(s_time_layer);
 	text_layer_destroy(s_date_layer);
 	bitmap_layer_destroy(s_pebble_image_layer);
-	text_layer_destroy(s_battery_level_layer);
-	bitmap_layer_destroy(s_battery_charge_layer);
-	
+	text_layer_destroy(s_pebble_battery_layer);
+	bitmap_layer_destroy(s_pebble_charge_layer);
+	bitmap_layer_destroy(s_phone_image_layer);
+	//text_layer_destroy(s_phone_battery_layer);
+	bitmap_layer_destroy(s_phone_disconnected_layer);
 }
 
 //Handler for every time a time unit changes (every minute)
-static void minute_update(struct tm *tick_time, TimeUnits units_changed) {
+static void time_update(struct tm *tick_time, TimeUnits units_changed) {
 	update_time();
+	
+	//Utilizing the bitmask, if the date has changed, update the date as well
+	if (units_changed & DAY_UNIT) {
+		update_date();
+	}
 }
 
-static void date_update(struct tm *tick_time, TimeUnits units_changed) {
-	update_date();
-}
-  
 static void init() {
 	//Create the main Window layer
 	s_main_window = window_create();
@@ -177,19 +233,20 @@ static void init() {
 	window_stack_push(s_main_window, true);
   
 	//Set a TickTimerService so it updates every minute
-	tick_timer_service_subscribe(MINUTE_UNIT, minute_update);
-	
-	//Set another TickTimerService so it updates every day
-	tick_timer_service_subscribe(DAY_UNIT, date_update);
+	//Note: cannot set a separate TickTimerService for every day,
+	//      so date will be updated along with it
+	tick_timer_service_subscribe(MINUTE_UNIT, time_update);
 	
 	//Set the Battery State Service so we can get battery level
 	battery_state_service_subscribe(battery_handler);
+	
+	//Set the BlueTooth Connection Service to see if it's connected to the phone
+	bluetooth_connection_service_subscribe(bluetooth_handler);
 }
 
 static void deinit() {
 	// Destroy Window
 	window_destroy(s_main_window);
-
 }
 
 int main(void) {
