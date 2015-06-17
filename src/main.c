@@ -71,6 +71,12 @@ static void update_date() {
 	text_layer_set_text(s_date_layer, dateString);
 }
 
+static void phone_battery(int value) {
+	static char phoneValue[] = "100%";
+	snprintf(phoneValue, sizeof("100%"), "%i%%", value);
+	text_layer_set_text(s_phone_battery_layer, phoneValue);
+}
+
 static void battery_handler(BatteryChargeState charge_state) {
 	//Temporary buffer value
 	static char batteryValue[] = "100%";
@@ -102,7 +108,7 @@ static void bluetooth_handler(bool connected) {
 		//text_layer_set_text(s_phone_battery_layer, #PHONE BATTERY LEVEL#);
 		bitmap_layer_set_bitmap(s_phone_disconnected_layer, NULL);
 	} else {
-		//text_layer_set_text(s_phone_battery_layer, "");
+		text_layer_set_text(s_phone_battery_layer, "");
 		bitmap_layer_set_bitmap(s_phone_disconnected_layer, s_phone_disconnected_image);
 	}
 }
@@ -134,11 +140,11 @@ static void main_window_load(Window *window) {
 	text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
 
 	//===============================PEBBLE BATTERY
-	s_pebble_image_layer = bitmap_layer_create(GRect(5, 45, 70, 70));
+	s_pebble_image_layer = bitmap_layer_create(GRect(6, 45, 70, 70));
 	s_pebble_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PEBBLE_ICON);
 	bitmap_layer_set_bitmap(s_pebble_image_layer, s_pebble_image);
 	
-	s_pebble_battery_layer = text_layer_create(GRect(25, 72, 30, 20));
+	s_pebble_battery_layer = text_layer_create(GRect(26, 72, 30, 20));
 	text_layer_set_background_color(s_pebble_battery_layer, GColorBlack);
 	text_layer_set_text_color(s_pebble_battery_layer, GColorWhite);
 	text_layer_set_text(s_pebble_battery_layer, "100%");
@@ -153,7 +159,7 @@ static void main_window_load(Window *window) {
 	bitmap_layer_set_bitmap(s_pebble_charge_layer, s_pebble_charge);
 	
 	//Plug image
-	s_pebble_plug_layer = bitmap_layer_create(GRect(2, 84, 11, 43));
+	s_pebble_plug_layer = bitmap_layer_create(GRect(8, 84, 11, 43));
 	s_pebble_plug = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PLUG_ICON);
 	bitmap_layer_set_bitmap(s_pebble_plug_layer, s_pebble_plug);
 	
@@ -239,9 +245,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 	Tuple *t = dict_read_first(iter);
 	if (t) {
 		int value = (int)t->value->int32;
-		static char phoneValue[] = "100%";
-		snprintf(phoneValue, sizeof("100%"), "%i%%", value);
-		text_layer_set_text(s_phone_battery_layer, phoneValue);
+		phone_battery(value);
 	}
 }
 

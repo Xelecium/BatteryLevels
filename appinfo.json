@@ -9,6 +9,11 @@
     "resources": {
         "media": [
             {
+                "file": "images/pebble.png",
+                "name": "IMAGE_PEBBLE_ICON",
+                "type": "png"
+            },
+            {
                 "file": "images/pebble_plug.png",
                 "name": "IMAGE_PLUG_ICON",
                 "type": "png"
@@ -26,11 +31,6 @@
             {
                 "file": "images/charge.png",
                 "name": "IMAGE_CHARGE_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/pebble.png",
-                "name": "IMAGE_PEBBLE_ICON",
                 "type": "png"
             },
             {
