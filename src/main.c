@@ -2,8 +2,8 @@
 	
 //Key for getting data from the phone 
 //about the battery & its charge status
-#define PHONE_BATTERY_DATA 3
-#define PHONE_PLUGGED_STATE 7
+#define PHONE_BATTERY_DATA_KEY 3
+#define PHONE_CHARGE_STATE_KEY 7
   
 //Main Window element
 static Window *s_main_window;
@@ -79,6 +79,17 @@ static void phone_battery(int value) {
 	static char phoneValue[] = "100%";
 	snprintf(phoneValue, sizeof("100%"), "%i%%", value);
 	text_layer_set_text(s_phone_battery_layer, phoneValue);
+}
+
+static void phone_plugged(int value) {
+	if (value == 0) {
+		//Phone is running on battery
+		bitmap_layer_set_bitmap(s_phone_plug_layer, NULL);
+	}
+	else {
+		//Some other state (charging via USB or AC)
+		bitmap_layer_set_bitmap(s_phone_plug_layer, s_phone_plug_image);
+	}
 }
 
 static void battery_handler(BatteryChargeState charge_state) {
@@ -254,11 +265,25 @@ static void time_update(struct tm *tick_time, TimeUnits units_changed) {
 }
 
 static void in_received_handler(DictionaryIterator *iter, void *context) {
-	Tuple *t = dict_read_first(iter);
-	if (t) {
-		int value = (int)t->value->int32;
-		phone_battery(value);
+	Tuple *tuple = dict_read_first(iter);
+	while (tuple) {
+		switch (tuple->key) {
+			case PHONE_BATTERY_DATA_KEY:
+				phone_battery((int)tuple->value->int32);
+				break;
+			case PHONE_CHARGE_STATE_KEY:
+				phone_plugged((int)tuple->value->int32);
+				break;
+			default: break;
+		}
+		tuple = dict_read_next(iter);
 	}
+	//First Key: Phone's battery level
+	//if (t) {
+	//	int value = (int)t->value->int32;
+	//	phone_battery(value);
+	//}
+	
 }
 
 static void init() {
