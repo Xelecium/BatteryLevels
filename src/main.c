@@ -79,9 +79,14 @@ static void update_date() {
 }
 
 static void phone_battery(int value) {
-	static char phoneValue[] = "100%";
-	snprintf(phoneValue, sizeof("100%"), "%i%%", value);
-	text_layer_set_text(s_phone_battery_layer, phoneValue);
+	static char phoneValue[] = "100";
+	if (value >= 100) {
+		snprintf(phoneValue, sizeof("100"), "100");
+	}
+	else {
+		snprintf(phoneValue, sizeof("100%"), "%i%%", value);
+	}
+		text_layer_set_text(s_phone_battery_layer, phoneValue);
 }
 
 static void phone_plugged(int value) {
@@ -97,7 +102,7 @@ static void phone_plugged(int value) {
 
 static void battery_handler(BatteryChargeState charge_state) {
 	//Temporary buffer value
-	static char batteryValue[] = "100%";
+	static char batteryValue[] = "100";
 	 
 	//Display plug if the pebble is plugged in
 	if (charge_state.is_plugged) {
@@ -116,18 +121,13 @@ static void battery_handler(BatteryChargeState charge_state) {
 	else {
 		//Empty the BitmapLayer, set the TextLayer
 		bitmap_layer_set_bitmap(s_pebble_charge_layer, NULL);
-		snprintf(batteryValue, sizeof(batteryValue), "%d%%", charge_state.charge_percent);
+		if (charge_state.charge_percent >= 100) {
+			snprintf(batteryValue, sizeof(batteryValue), "100");
+		}
+		else {
+			snprintf(batteryValue, sizeof(batteryValue), "%d%%", charge_state.charge_percent);
+		}
 		text_layer_set_text(s_pebble_battery_layer, batteryValue);
-	}
-}
-
-static void bluetooth_handler(bool connected) {
-	if (connected) {
-		//text_layer_set_text(s_phone_battery_layer, #PHONE BATTERY LEVEL#);
-		bitmap_layer_set_bitmap(s_phone_disconnected_layer, NULL);
-	} else {
-		text_layer_set_text(s_phone_battery_layer, "");
-		bitmap_layer_set_bitmap(s_phone_disconnected_layer, s_phone_disconnected_image);
 	}
 }
 
@@ -136,6 +136,19 @@ static void ping_phone(int key, int value) {
 	app_message_outbox_begin(&iter);
 	dict_write_int(iter, key, &value, sizeof(int), true);
 	app_message_outbox_send();
+}
+
+static void bluetooth_handler(bool connected) {
+	if (connected) {
+		//Send a signal to the phone to send battery info
+		bitmap_layer_set_bitmap(s_phone_disconnected_layer, NULL);
+		ping_phone(SIGNAL_TO_PHONE_KEY, 1);	
+	} else {
+		//We can't get info about the phone, so adjust related images
+		text_layer_set_text(s_phone_battery_layer, "");
+		bitmap_layer_set_bitmap(s_phone_disconnected_layer, s_phone_disconnected_image);
+		bitmap_layer_set_bitmap(s_phone_plug_layer, NULL);
+	}
 }
 
 static void main_window_load(Window *window) {
@@ -148,7 +161,7 @@ static void main_window_load(Window *window) {
 	text_layer_set_text_color(s_time_layer, GColorWhite);
 	text_layer_set_text(s_time_layer, "");
 	
-	s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_36));
+	s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROUND_36));
 	text_layer_set_font(s_time_layer, s_time_font);
 	
 	text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
@@ -159,7 +172,7 @@ static void main_window_load(Window *window) {
 	text_layer_set_text_color(s_date_layer, GColorWhite);
 	text_layer_set_text(s_date_layer, "");
 	
-	s_date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_24));
+	s_date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROUND_24));
 	text_layer_set_font(s_date_layer, s_date_font);
 	
 	text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
@@ -174,7 +187,7 @@ static void main_window_load(Window *window) {
 	text_layer_set_text_color(s_pebble_battery_layer, GColorWhite);
 	text_layer_set_text(s_pebble_battery_layer, "");
 	
-	s_pebble_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_12));
+	s_pebble_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROUND_12));
 	text_layer_set_font(s_pebble_battery_layer, s_pebble_font);
 	
 	text_layer_set_text_alignment(s_pebble_battery_layer, GTextAlignmentCenter);
@@ -198,7 +211,7 @@ static void main_window_load(Window *window) {
 	text_layer_set_text_color(s_phone_battery_layer, GColorWhite);
 	text_layer_set_text(s_phone_battery_layer, "");
 	
-	s_phone_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_12));
+	s_phone_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROUND_12));
 	text_layer_set_font(s_phone_battery_layer, s_phone_font);
 	
 	text_layer_set_text_alignment(s_phone_battery_layer, GTextAlignmentCenter);

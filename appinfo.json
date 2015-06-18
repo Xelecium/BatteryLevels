@@ -9,6 +9,21 @@
     "resources": {
         "media": [
             {
+                "file": "fonts/Round.ttf",
+                "name": "FONT_ROUND_12",
+                "type": "font"
+            },
+            {
+                "file": "fonts/Round.ttf",
+                "name": "FONT_ROUND_24",
+                "type": "font"
+            },
+            {
+                "file": "fonts/Round.ttf",
+                "name": "FONT_ROUND_36",
+                "type": "font"
+            },
+            {
                 "file": "images/phone_plug.png",
                 "name": "IMAGE_PHONE_PLUG_ICON",
                 "type": "png"
