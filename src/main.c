@@ -43,7 +43,7 @@ static void update_time() {
 	time_t temp = time(NULL); 
 	struct tm *now = localtime(&temp);
 
-	//Character array (string) to hold the time
+	//Character array (string) to hold the time, with placeholder text
 	static char timeString[] = "00:00";
 
 	//Save the value of the time item
@@ -65,7 +65,7 @@ static void update_date() {
 	time_t temp = time(NULL);
 	struct tm *now = localtime(&temp);
 	
-	//Character array (string) to hold the date
+	//Character array (string) to hold the date, with a placeholder
 	static char dateString[] = "25 September";
 	
 	//Save the value of the date item
@@ -136,7 +136,7 @@ static void main_window_load(Window *window) {
 	s_time_layer = text_layer_create(GRect(0, 115, 144, 40));
 	text_layer_set_background_color(s_time_layer, GColorBlack);
 	text_layer_set_text_color(s_time_layer, GColorWhite);
-	text_layer_set_text(s_time_layer, "00:00");
+	text_layer_set_text(s_time_layer, "");
 	
 	s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_36));
 	text_layer_set_font(s_time_layer, s_time_font);
@@ -147,7 +147,7 @@ static void main_window_load(Window *window) {
 	s_date_layer = text_layer_create(GRect(0, 10, 144, 30));
 	text_layer_set_background_color(s_date_layer, GColorBlack);
 	text_layer_set_text_color(s_date_layer, GColorWhite);
-	text_layer_set_text(s_date_layer, "01 January");
+	text_layer_set_text(s_date_layer, "");
 	
 	s_date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LANE_24));
 	text_layer_set_font(s_date_layer, s_date_font);
@@ -176,7 +176,7 @@ static void main_window_load(Window *window) {
 	//Plug image
 	s_pebble_plug_layer = bitmap_layer_create(GRect(8, 84, 11, 43));
 	s_pebble_plug = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PEBBLE_PLUG_ICON);
-	bitmap_layer_set_bitmap(s_pebble_plug_layer, s_pebble_plug);
+	bitmap_layer_set_bitmap(s_pebble_plug_layer, NULL);
 	
 	//=================================PHONE BATTERY
 	s_phone_image_layer = bitmap_layer_create(GRect(70, 45, 70, 70));
@@ -196,7 +196,7 @@ static void main_window_load(Window *window) {
 	//Plug image
 	s_phone_plug_layer = bitmap_layer_create(GRect(102, 113, 32, 9));
 	s_phone_plug_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PHONE_PLUG_ICON);
-	bitmap_layer_set_bitmap(s_phone_plug_layer, s_phone_plug_image);
+	bitmap_layer_set_bitmap(s_phone_plug_layer, NULL);
 	
 	//Disconnected image
 	s_phone_disconnected_layer = bitmap_layer_create(GRect(95, 70, 20, 20));
@@ -278,12 +278,6 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 		}
 		tuple = dict_read_next(iter);
 	}
-	//First Key: Phone's battery level
-	//if (t) {
-	//	int value = (int)t->value->int32;
-	//	phone_battery(value);
-	//}
-	
 }
 
 static void init() {
