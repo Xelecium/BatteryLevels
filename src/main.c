@@ -5,6 +5,9 @@
 #define PHONE_BATTERY_DATA_KEY 3
 #define PHONE_CHARGE_STATE_KEY 7
   
+//Key for pinging the phone to update information
+#define SIGNAL_TO_PHONE_KEY 11
+	
 //Main Window element
 static Window *s_main_window;
 
@@ -128,6 +131,13 @@ static void bluetooth_handler(bool connected) {
 	}
 }
 
+static void ping_phone(int key, int value) {
+	DictionaryIterator *iter;
+	app_message_outbox_begin(&iter);
+	dict_write_int(iter, key, &value, sizeof(int), true);
+	app_message_outbox_send();
+}
+
 static void main_window_load(Window *window) {
 	//Set the background of the watchface to black
 	window_set_background_color(window, GColorBlack);
@@ -203,6 +213,8 @@ static void main_window_load(Window *window) {
 	s_phone_disconnected_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_DISCONNECTED_ICON);
 	bitmap_layer_set_bitmap(s_phone_disconnected_layer, s_phone_disconnected_image);
 	
+	//Ping the phone to send back phone battery and plugged state
+	ping_phone(SIGNAL_TO_PHONE_KEY, 1);	
 	
 	//=================================CLEANUP
 	//Add the Layers as children of the Window layer
@@ -292,13 +304,15 @@ static void init() {
 	
 	//Register AppMessage events
 	app_message_register_inbox_received(in_received_handler);         
-	app_message_open(512, 512);    //Large input and output buffer sizes
+	//app_message_open(512, 512);    //Large input and output buffer sizes
+	app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+	
 
 	//Show the Window on the watch (animated=true)
 	window_stack_push(s_main_window, true);
   
 	//Set a TickTimerService so it updates every minute
-	//Note: cannot set a separate TickTimerService for every day,
+	//Note: cannot set an additional TickTimerService for every day,
 	//      so date will be updated along with it
 	tick_timer_service_subscribe(MINUTE_UNIT, time_update);
 	
