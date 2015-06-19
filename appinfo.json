@@ -9,6 +9,12 @@
     "resources": {
         "media": [
             {
+                "file": "images/menu_image.png",
+                "menuIcon": true,
+                "name": "IMAGE_MENU_IMAGE",
+                "type": "png"
+            },
+            {
                 "file": "fonts/Round.ttf",
                 "name": "FONT_ROUND_12",
                 "type": "font"
