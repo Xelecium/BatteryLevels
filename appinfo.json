@@ -9,6 +9,11 @@
     "resources": {
         "media": [
             {
+                "file": "images/pebble.png",
+                "name": "IMAGE_PEBBLE_ICON",
+                "type": "png"
+            },
+            {
                 "file": "images/menu_image.png",
                 "menuIcon": true,
                 "name": "IMAGE_MENU_IMAGE",
@@ -32,11 +37,6 @@
             {
                 "file": "images/phone_plug.png",
                 "name": "IMAGE_PHONE_PLUG_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/pebble.png",
-                "name": "IMAGE_PEBBLE_ICON",
                 "type": "png"
             },
             {

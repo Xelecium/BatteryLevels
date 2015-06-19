@@ -40,6 +40,15 @@ static GBitmap *s_phone_plug_image;
 static BitmapLayer *s_phone_disconnected_layer;
 static GBitmap *s_phone_disconnected_image;
 
+
+//===================PING PHONE
+static void ping_phone(int key, int value) {
+	DictionaryIterator *iter;
+	app_message_outbox_begin(&iter);
+	dict_write_int(iter, key, &value, sizeof(int), true);
+	app_message_outbox_send();
+}
+
 //===================UPDATE TIME
 static void update_time() {
 	//Get a tm structure
@@ -62,6 +71,7 @@ static void update_time() {
 	// Display this time on the TextLayer
 	text_layer_set_text(s_time_layer, timeString);
 	APP_LOG(APP_LOG_LEVEL_INFO, "Updated time to %s", timeString);
+	ping_phone(SIGNAL_TO_PHONE_KEY, 1);	
 }
 
 //====================UPDATE DATE
@@ -140,15 +150,6 @@ static void battery_handler(BatteryChargeState charge_state) {
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Pebble Charge State: %i", charge_state.is_charging);
 }
 
-//===================PING PHONE
-static void ping_phone(int key, int value) {
-	DictionaryIterator *iter;
-	app_message_outbox_begin(&iter);
-	dict_write_int(iter, key, &value, sizeof(int), true);
-	app_message_outbox_send();
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "Sent ping to phone");
-}
-
 //===================BLUETOOTH HANDLER
 static void bluetooth_handler(bool connected) {
 	if (connected) {
@@ -183,15 +184,17 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 }
 //====================COMMUNICATION CALLBACKS
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
+	APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
 }
 
 static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
+	APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
+	text_layer_set_text(s_phone_battery_layer, "");
+	bitmap_layer_set_bitmap(s_phone_plug_layer, NULL);
 }
 
 static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
+	APP_LOG(APP_LOG_LEVEL_INFO, "Sent ping to phone");
 }
 
 //======================WINDOW LOAD
@@ -200,7 +203,7 @@ static void main_window_load(Window *window) {
 	window_set_background_color(window, GColorBlack);
 	
 	//===============================TIME
-	s_time_layer = text_layer_create(GRect(0, 115, 144, 40));
+	s_time_layer = text_layer_create(GRect(0, 117, 144, 40));
 	text_layer_set_background_color(s_time_layer, GColorBlack);
 	text_layer_set_text_color(s_time_layer, GColorWhite);
 	text_layer_set_text(s_time_layer, "");
