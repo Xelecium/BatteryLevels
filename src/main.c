@@ -61,6 +61,7 @@ static void update_time() {
 
 	// Display this time on the TextLayer
 	text_layer_set_text(s_time_layer, timeString);
+	APP_LOG(APP_LOG_LEVEL_INFO, "Updated time to %s", timeString);
 }
 
 //====================UPDATE DATE
@@ -77,6 +78,7 @@ static void update_date() {
 	
 	//Set the date on the date TextLayer
 	text_layer_set_text(s_date_layer, dateString);
+	APP_LOG(APP_LOG_LEVEL_INFO, "Updated date to %s", dateString);
 }
 
 //======================PHONE STATUS
@@ -88,7 +90,8 @@ static void phone_battery(int value) {
 	else {
 		snprintf(phoneValue, sizeof("100%"), "%i%%", value);
 	}
-		text_layer_set_text(s_phone_battery_layer, phoneValue);
+	text_layer_set_text(s_phone_battery_layer, phoneValue);
+	APP_LOG(APP_LOG_LEVEL_INFO, "Phone Battery Level Update: %i%%", value);
 }
 
 static void phone_plugged(int value) {
@@ -100,6 +103,7 @@ static void phone_plugged(int value) {
 		//Some other state (charging via USB or AC)
 		bitmap_layer_set_bitmap(s_phone_plug_layer, s_phone_plug_image);
 	}
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Phone Charge State: %i", value);
 }
 
 //=====================PEBBLE STATUS
@@ -132,6 +136,8 @@ static void battery_handler(BatteryChargeState charge_state) {
 		}
 		text_layer_set_text(s_pebble_battery_layer, batteryValue);
 	}
+	APP_LOG(APP_LOG_LEVEL_INFO, "Pebble Battery Status: %i%%", charge_state.charge_percent);
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Pebble Charge State: %i", charge_state.is_charging);
 }
 
 //===================PING PHONE
@@ -140,6 +146,7 @@ static void ping_phone(int key, int value) {
 	app_message_outbox_begin(&iter);
 	dict_write_int(iter, key, &value, sizeof(int), true);
 	app_message_outbox_send();
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Sent ping to phone");
 }
 
 //===================BLUETOOTH HANDLER
@@ -154,6 +161,7 @@ static void bluetooth_handler(bool connected) {
 		bitmap_layer_set_bitmap(s_phone_disconnected_layer, s_phone_disconnected_image);
 		bitmap_layer_set_bitmap(s_phone_plug_layer, NULL);
 	}
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "BlueTooth connection status: %i", connected);
 }
 
 //===================DATA RECEIVER HANDLER
@@ -162,15 +170,28 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 	while (tuple) {
 		switch (tuple->key) {
 			case PHONE_BATTERY_DATA_KEY:
-				phone_battery((int)tuple->value->int32);
+				phone_battery((int)tuple->value);
 				break;
 			case PHONE_CHARGE_STATE_KEY:
-				phone_plugged((int)tuple->value->int32);
+				phone_plugged((int)tuple->value);
 				break;
 			default: break;
 		}
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Data: Key %i with value %i", (int)tuple->key, (int)tuple->value);
 		tuple = dict_read_next(iter);
 	}
+}
+//====================COMMUNICATION CALLBACKS
+static void inbox_dropped_callback(AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
+}
+
+static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
+}
+
+static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
 }
 
 //======================WINDOW LOAD
@@ -273,6 +294,8 @@ static void main_window_load(Window *window) {
   	battery_handler(battery_state_service_peek());
 	//Get the BlueTooth connection status
 	bluetooth_handler(bluetooth_connection_service_peek());
+	
+	APP_LOG(APP_LOG_LEVEL_INFO, "Loaded all Window elements");
 }
 
 static void main_window_unload(Window *window) {
@@ -300,6 +323,8 @@ static void main_window_unload(Window *window) {
 	text_layer_destroy(s_phone_battery_layer);
 	bitmap_layer_destroy(s_phone_disconnected_layer);
 	bitmap_layer_destroy(s_phone_plug_layer);
+	
+	APP_LOG(APP_LOG_LEVEL_INFO, "Unloaded all Window elements");
 }
 
 //Handler for every time a time unit changes (every minute)
@@ -324,13 +349,12 @@ static void init() {
 	
 	//Register AppMessage events
 	app_message_register_inbox_received(in_received_handler);         
-	//app_message_open(512, 512);    //Large input and output buffer sizes
 	app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 	
+	app_message_register_inbox_dropped(inbox_dropped_callback);
+	app_message_register_outbox_failed(outbox_failed_callback);
+	app_message_register_outbox_sent(outbox_sent_callback);
 
-	//Show the Window on the watch (animated=true)
-	window_stack_push(s_main_window, true);
-  
 	//Set a TickTimerService so it updates every minute
 	//Note: cannot set an additional TickTimerService for every day,
 	//      so date will be updated along with it
@@ -341,6 +365,12 @@ static void init() {
 	
 	//Set the BlueTooth Connection Service to see if it's connected to the phone
 	bluetooth_connection_service_subscribe(bluetooth_handler);
+	
+	//Show the Window on the watch (animated=true)
+	//NOTE: Should be called after everything else in init()
+	window_stack_push(s_main_window, true);
+	
+	APP_LOG(APP_LOG_LEVEL_INFO, "Initialized");
 }
 
 static void deinit() {
@@ -350,6 +380,8 @@ static void deinit() {
 	tick_timer_service_unsubscribe();
 	battery_state_service_unsubscribe();
 	bluetooth_connection_service_unsubscribe();
+	
+	APP_LOG(APP_LOG_LEVEL_INFO, "Deinitialized");
 }
 
 int main(void) {
