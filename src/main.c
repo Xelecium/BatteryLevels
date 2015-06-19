@@ -173,23 +173,6 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 	}
 }
 
-//==================COMMUNICATION CALLBACKS
-static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "Message received!");
-}
-
-static void inbox_dropped_callback(AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
-}
-
-static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
-}
-
-static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
-}
-
 //======================WINDOW LOAD
 static void main_window_load(Window *window) {
 	//Set the background of the watchface to black
@@ -358,12 +341,6 @@ static void init() {
 	
 	//Set the BlueTooth Connection Service to see if it's connected to the phone
 	bluetooth_connection_service_subscribe(bluetooth_handler);
-	
-	//Callbacks for communication
-	app_message_register_inbox_received(inbox_received_callback);
-	app_message_register_inbox_dropped(inbox_dropped_callback);
-	app_message_register_outbox_failed(outbox_failed_callback);
-	app_message_register_outbox_sent(outbox_sent_callback);
 }
 
 static void deinit() {
