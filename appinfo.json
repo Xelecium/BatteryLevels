@@ -4,7 +4,7 @@
         ""
     ],
     "companyName": "Xelecium Labs",
-    "longName": "Pebble Batteries",
+    "longName": "Battery Levels",
     "projectType": "native",
     "resources": {
         "media": [
@@ -62,7 +62,7 @@
         ]
     },
     "sdkVersion": "2",
-    "shortName": "PebbleBatt",
+    "shortName": "BatteryLevels",
     "uuid": "1e4990c7-8abe-4643-a0fd-1d86e26503b4",
     "versionCode": 1,
     "versionLabel": "1.0",

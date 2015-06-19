@@ -170,14 +170,14 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 	while (tuple) {
 		switch (tuple->key) {
 			case PHONE_BATTERY_DATA_KEY:
-				phone_battery((int)tuple->value);
+				phone_battery((int)tuple->value->int32);
 				break;
 			case PHONE_CHARGE_STATE_KEY:
-				phone_plugged((int)tuple->value);
+				phone_plugged((int)tuple->value->int32);
 				break;
 			default: break;
 		}
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Data: Key %i with value %i", (int)tuple->key, (int)tuple->value);
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Data: Value %i", (int)tuple->value->int32);
 		tuple = dict_read_next(iter);
 	}
 }
