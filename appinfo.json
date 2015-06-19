@@ -52,21 +52,6 @@
                 "file": "images/charge.png",
                 "name": "IMAGE_CHARGE_ICON",
                 "type": "png"
-            },
-            {
-                "file": "fonts/Lane.ttf",
-                "name": "FONT_LANE_36",
-                "type": "font"
-            },
-            {
-                "file": "fonts/Lane.ttf",
-                "name": "FONT_LANE_24",
-                "type": "font"
-            },
-            {
-                "file": "fonts/Lane.ttf",
-                "name": "FONT_LANE_12",
-                "type": "font"
             }
         ]
     },

@@ -40,7 +40,7 @@ static GBitmap *s_phone_plug_image;
 static BitmapLayer *s_phone_disconnected_layer;
 static GBitmap *s_phone_disconnected_image;
 
-
+//===================UPDATE TIME
 static void update_time() {
 	//Get a tm structure
 	time_t temp = time(NULL); 
@@ -63,6 +63,7 @@ static void update_time() {
 	text_layer_set_text(s_time_layer, timeString);
 }
 
+//====================UPDATE DATE
 static void update_date() {
 	//Get a tm structure
 	time_t temp = time(NULL);
@@ -78,6 +79,7 @@ static void update_date() {
 	text_layer_set_text(s_date_layer, dateString);
 }
 
+//======================PHONE STATUS
 static void phone_battery(int value) {
 	static char phoneValue[] = "100";
 	if (value >= 100) {
@@ -100,6 +102,7 @@ static void phone_plugged(int value) {
 	}
 }
 
+//=====================PEBBLE STATUS
 static void battery_handler(BatteryChargeState charge_state) {
 	//Temporary buffer value
 	static char batteryValue[] = "100";
@@ -131,6 +134,7 @@ static void battery_handler(BatteryChargeState charge_state) {
 	}
 }
 
+//===================PING PHONE
 static void ping_phone(int key, int value) {
 	DictionaryIterator *iter;
 	app_message_outbox_begin(&iter);
@@ -138,6 +142,7 @@ static void ping_phone(int key, int value) {
 	app_message_outbox_send();
 }
 
+//===================BLUETOOTH HANDLER
 static void bluetooth_handler(bool connected) {
 	if (connected) {
 		//Send a signal to the phone to send battery info
@@ -151,6 +156,24 @@ static void bluetooth_handler(bool connected) {
 	}
 }
 
+//===================DATA RECEIVER HANDLER
+static void in_received_handler(DictionaryIterator *iter, void *context) {
+	Tuple *tuple = dict_read_first(iter);
+	while (tuple) {
+		switch (tuple->key) {
+			case PHONE_BATTERY_DATA_KEY:
+				phone_battery((int)tuple->value->int32);
+				break;
+			case PHONE_CHARGE_STATE_KEY:
+				phone_plugged((int)tuple->value->int32);
+				break;
+			default: break;
+		}
+		tuple = dict_read_next(iter);
+	}
+}
+
+//======================WINDOW LOAD
 static void main_window_load(Window *window) {
 	//Set the background of the watchface to black
 	window_set_background_color(window, GColorBlack);
@@ -289,22 +312,6 @@ static void time_update(struct tm *tick_time, TimeUnits units_changed) {
 	}
 }
 
-static void in_received_handler(DictionaryIterator *iter, void *context) {
-	Tuple *tuple = dict_read_first(iter);
-	while (tuple) {
-		switch (tuple->key) {
-			case PHONE_BATTERY_DATA_KEY:
-				phone_battery((int)tuple->value->int32);
-				break;
-			case PHONE_CHARGE_STATE_KEY:
-				phone_plugged((int)tuple->value->int32);
-				break;
-			default: break;
-		}
-		tuple = dict_read_next(iter);
-	}
-}
-
 static void init() {
 	//Create the main Window layer
 	s_main_window = window_create();
@@ -339,6 +346,10 @@ static void init() {
 static void deinit() {
 	// Destroy Window
 	window_destroy(s_main_window);
+	//Unsubscribe the handlers
+	tick_timer_service_unsubscribe();
+	battery_state_service_unsubscribe();
+	bluetooth_connection_service_unsubscribe();
 }
 
 int main(void) {
