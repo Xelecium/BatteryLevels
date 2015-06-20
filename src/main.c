@@ -219,7 +219,7 @@ static void main_window_load(Window *window) {
 	text_layer_set_text_color(s_date_layer, GColorWhite);
 	text_layer_set_text(s_date_layer, "");
 	
-	s_date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROUND_24));
+	s_date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROUND_20));
 	text_layer_set_font(s_date_layer, s_date_font);
 	
 	text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);

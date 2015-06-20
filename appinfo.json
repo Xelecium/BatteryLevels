@@ -21,17 +21,17 @@
             },
             {
                 "file": "fonts/Round.ttf",
-                "name": "FONT_ROUND_12",
-                "type": "font"
-            },
-            {
-                "file": "fonts/Round.ttf",
-                "name": "FONT_ROUND_24",
-                "type": "font"
-            },
-            {
-                "file": "fonts/Round.ttf",
                 "name": "FONT_ROUND_36",
+                "type": "font"
+            },
+            {
+                "file": "fonts/Round.ttf",
+                "name": "FONT_ROUND_20",
+                "type": "font"
+            },
+            {
+                "file": "fonts/Round.ttf",
+                "name": "FONT_ROUND_12",
                 "type": "font"
             },
             {
